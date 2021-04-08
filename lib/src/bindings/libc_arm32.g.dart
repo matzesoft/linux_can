@@ -1,3 +1,4 @@
+import 'ffi_opaques.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
 // **************************************************************************
@@ -12,17 +13,17 @@
 import 'dart:ffi' as ffi;
 
 /// libc backend for arm
-class LibCPlatformBackend {
+class LibCArm32 {
   /// Holds the symbol lookup function.
   final ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName)
       _lookup;
 
   /// The symbols are looked up in [dynamicLibrary].
-  LibCPlatformBackend(ffi.DynamicLibrary dynamicLibrary)
+  LibCArm32(ffi.DynamicLibrary dynamicLibrary)
       : _lookup = dynamicLibrary.lookup;
 
   /// The symbols are looked up with [lookup].
-  LibCPlatformBackend.fromLookup(
+  LibCArm32.fromLookup(
       ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName)
           lookup)
       : _lookup = lookup;
@@ -472,7 +473,7 @@ class LibCPlatformBackend {
 }
 
 class _SymbolAddresses {
-  final LibCPlatformBackend _library;
+  final LibCArm32 _library;
   _SymbolAddresses(this._library);
   ffi.Pointer<ffi.NativeFunction<Native_ioctl>> get ioctl =>
       _library._ioctl_ptr;
@@ -545,7 +546,7 @@ abstract class EPOLL_EVENTS {
   static const int EPOLLET = -2147483648;
 }
 
-class epoll_event extends ffi.Opaque {}
+// class epoll_event extends ffi.Opaque {}
 
 class iovec extends ffi.Struct {
   external ffi.Pointer<ffi.Void> iov_base;

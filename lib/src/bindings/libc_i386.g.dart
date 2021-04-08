@@ -12,17 +12,17 @@
 import 'dart:ffi' as ffi;
 
 /// libc backend for i386
-class LibCPlatformBackend {
+class LibCI386 {
   /// Holds the symbol lookup function.
   final ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName)
       _lookup;
 
   /// The symbols are looked up in [dynamicLibrary].
-  LibCPlatformBackend(ffi.DynamicLibrary dynamicLibrary)
+  LibCI386(ffi.DynamicLibrary dynamicLibrary)
       : _lookup = dynamicLibrary.lookup;
 
   /// The symbols are looked up with [lookup].
-  LibCPlatformBackend.fromLookup(
+  LibCI386.fromLookup(
       ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName)
           lookup)
       : _lookup = lookup;
@@ -472,7 +472,7 @@ class LibCPlatformBackend {
 }
 
 class _SymbolAddresses {
-  final LibCPlatformBackend _library;
+  final LibCI386 _library;
   _SymbolAddresses(this._library);
   ffi.Pointer<ffi.NativeFunction<Native_ioctl>> get ioctl =>
       _library._ioctl_ptr;
