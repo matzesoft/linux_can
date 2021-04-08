@@ -1,0 +1,15 @@
+name: linux_can
+description: Dart implementation of SocketCAN.
+version: 0.0.1
+author: matzesoft
+
+environment:
+  sdk: ">=2.12.0 <3.0.0"
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  ffi: ^0.1.3
+
+
