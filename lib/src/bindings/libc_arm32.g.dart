@@ -1,4 +1,4 @@
-import 'ffi_opaques.dart';
+import 'custom_bindings.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
 // **************************************************************************
@@ -1668,7 +1668,7 @@ class ifmap extends ffi.Struct {
   external int port;
 }
 
-class ifreq extends ffi.Opaque {}
+// class ifreq extends ffi.Opaque {}
 
 class ifconf extends ffi.Opaque {}
 
@@ -2306,7 +2306,7 @@ class ArrayHelper_canfd_frame_data_level0 {
 /// @can_family:  address family number AF_CAN.
 /// @can_ifindex: CAN network interface index.
 /// @can_addr:    protocol specific address information
-class sockaddr_can extends ffi.Opaque {}
+// class sockaddr_can extends ffi.Opaque {}
 
 /// struct can_filter - CAN ID based filter in can_register().
 /// @can_id:   relevant bits of CAN ID which are not masked out.
