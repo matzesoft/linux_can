@@ -1,46 +1,51 @@
-// import 'dart:ffi';
-// import 'bindings/libc_arm32.g.dart';
+import 'dart:ffi' as ffi;
+import 'package:ffi/ffi.dart';
+import 'package:linux_can/src/bindings.dart';
+import 'package:linux_can/src/bindings/custom_bindings.dart';
 
-// const String _dylib = "libc.so.6";
+import 'bindings/libc_arm32.g.dart';
 
-// class LinuxCan {
-//   final DynamicLibrary library = DynamicLibrary.open(_dylib);
-//   late final LibCArm32 _backend = LibCArm32(library);
+const String _dylib = "libc.so.6";
+const String _canInterface = "can0";
 
-//   setup() {
-//     _backend.socket(PF_CAN, SOCK_RAW, CAN_RAW);
-//   }
+class CanDevice {
+  final _library = ffi.DynamicLibrary.open(_dylib);
+  late final _backend = LibC(_library);
 
-//   // run() {
-//   //   int s;
-//   //   sockaddr_can addr;
-//   //   ifreq ifr;
+  int _socket = -1;
 
-//   //   s = _backend.socket(PF_CAN, SOCK_RAW, CAN_RAW);
+  void setup() {
+    print("Setup CanDevice");
+    _socket = _backend.socket(PF_CAN, SOCK_RAW, CAN_RAW);
+    if (_socket < 0) throw Exception("Failed to initalize CAN socket.");
+    print("Socket: $_socket");
 
-//   //   _backend.strcpy(ifr.ifr_name, "can0" );
-//   //   _backend.ioctl(s, );
+    final ifreq ifr = ifreq();
+    ifr.ifr_name = Utf8.toUtf8(_canInterface);
+    final ioctlOutput =
+        _backend.ioctlPointer(_socket, SIOCGIFINDEX, ifr.addressOf);
+    print("ioctlPointer: $ioctlOutput");
 
-//   //   addr = AF_CAN;
-//   //   addr.can_ifindex = ifr.ifr_ifindex;
+    final sockaddr_can addr = sockaddr_can();
+    addr.can_family = AF_CAN;
+    addr.can_ifindex = ifr.ifr_ifindex;
 
-//   //   bind(s, (struct sockaddr *)&addr, sizeof(addr));
-//   // }
-// }
+    final addrPointer = addr.addressOf.cast<sockaddr>();
+    final len = ffi.sizeOf<sockaddr>();
+    if (_backend.bind(_socket, addrPointer, len) < 0)
+      throw Exception("Failed to bind CAN socket.");
+    print("Finished setup.");
+  }
 
-// class CanBindings implements LinuxCan {
-//   @override
-//   // TODO: implement _backend
-//   LibCArm32 get _backend => throw UnimplementedError();
+  int read() {
+    if (_socket < 0) throw StateError("Setup CanDevice before reading.");
 
-//   @override
-//   // TODO: implement library
-//   DynamicLibrary get library => throw UnimplementedError();
+    final can_frame frame = can_frame();
+    final pointer = frame.addressOf.cast<ffi.Void>();
+    final len = ffi.sizeOf<can_frame>();
+    final output = _backend.read(_socket, pointer, len);
 
-//   @override
-//   setup() {
-//     // TODO: implement setup
-//     throw UnimplementedError();
-//   }
-
-// }
+    if (output < 0) throw Exception("Failed to read from CanDevice");
+    return output;
+  }
+}
