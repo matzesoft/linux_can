@@ -1,6 +1,6 @@
 import 'dart:ffi' as ffi;
 import 'package:linux_can/src/bindings/custom_bindings.dart';
-import 'package:linux_can/src/bindings/libc_arm32.g.dart' ;
+import 'package:linux_can/src/bindings/libc_arm32.g.dart';
 import 'package:linux_can/src/bindings/libc_arm64.g.dart';
 
 typedef _c_ioctl_pointer_32 = ffi.Int32 Function(
@@ -62,10 +62,8 @@ class LibC64 extends LibCArm64 implements LibCBase {
 /// Final interface to call C functions.
 class LibC implements LibCBase {
   factory LibC(ffi.DynamicLibrary dylib) {
-    print("factory LibC");
     LibCBase _native;
 
-    print("Pointer size: ${ffi.sizeOf<ffi.Pointer>()}");
     if (ffi.sizeOf<ffi.Pointer>() == 8) {
       _native = LibC64(dylib);
     } else {

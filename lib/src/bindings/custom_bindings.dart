@@ -1,7 +1,7 @@
 import 'dart:ffi' as ffi;
 import 'package:ffi/ffi.dart';
 
-const int SIOCGIFINDEX = 0x8933;
+const SIOCGIFINDEX = 0x8933;
 
 // ignore: camel_case_types
 class epoll_event extends ffi.Struct {
