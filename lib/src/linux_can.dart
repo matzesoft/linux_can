@@ -6,7 +6,12 @@ import 'package:linux_can/src/bindings/custom_bindings.dart';
 import 'bindings/libc_arm32.g.dart';
 
 const _dylib = "libc.so.6";
-const _canInterface = "can0";
+const _canInterface = [
+  0x63, //c
+  0x61, //a
+  0x6E, //n
+  0x30, //0
+];
 
 class CanDevice {
   final _library = ffi.DynamicLibrary.open(_dylib);
@@ -20,35 +25,53 @@ class CanDevice {
 
     final ifrPtr = ffi.allocate<ifreq>();
     final ifr = ifrPtr.ref;
-    ifr.ifr_name = ffi.Utf8.toUtf8(_canInterface);
-    print("Name: ${ifrPtr.ref.ifr_name.ref}");
+    ifr.ifr_name[0] = _canInterface[0];
+    ifr.ifr_name[1] = _canInterface[1];
+    ifr.ifr_name[2] = _canInterface[2];
+    ifr.ifr_name[3] = _canInterface[3];
     final outputioctl = _backend.ioctlPointer(_socket, SIOCGIFINDEX, ifrPtr);
-    print("Output ioctl: $outputioctl");
     if (outputioctl < 0) throw StateError("Failed to initalize CAN socket.");
 
-    final addrPtr = ffi.allocate<sockaddr_can>();
-    final addr = addrPtr.ref;
-    addr.can_family = AF_CAN;
-    addr.can_ifindex = ifr.ifr_ifindex;
+    final addrCanPtr = ffi.allocate<sockaddr_can>();
+    final addrCan = addrCanPtr.ref;
+    addrCan.can_family = AF_CAN;
+    addrCan.can_ifindex = ifr.ifr_ifindex;
 
     final len = ffi.sizeOf<sockaddr>();
-    final sockaddrPtr = addrPtr.cast<sockaddr>();
+    final sockaddrPtr = addrCanPtr.cast<sockaddr>();
     final output = _backend.bind(_socket, sockaddrPtr, len);
-    print("Output: $output");
     if (output < 0) throw StateError("Failed to bind CAN socket.");
 
-    print("Finished setup.");
+    ffi.free(ifrPtr);
+    ffi.free(addrCanPtr);
   }
 
-  int read() {
-    if (_socket < 0) throw StateError("Setup CanDevice before reading.");
+  CanFrame read() {
+    if (_socket < 0) throw StateError("Call setup() before reading.");
 
-    final can_frame frame = can_frame();
-    final pointer = frame.addressOf.cast<ffi.Void>();
+    final canFrame = ffi.allocate<can_frame>();
+    final pointer = canFrame.cast<ffi.Void>();
     final len = ffi.sizeOf<can_frame>();
-    final output = _backend.read(_socket, pointer, len);
+    if (_backend.read(_socket, pointer, len) < 0)
+      throw Exception("Failed to read from CanDevice");
 
-    if (output < 0) throw Exception("Failed to read from CanDevice");
-    return output;
+    final resultFrame = pointer.cast<can_frame>().ref;
+    final read = CanFrame._fromNative(resultFrame);
+
+    ffi.free(canFrame);
+    return read;
+  }
+}
+
+class CanFrame {
+  int? id;
+  List<int> data = [];
+
+  CanFrame._fromNative(can_frame frame) {
+    id = frame.can_id;
+    final results = frame.data;
+    for (int i = 0; i < results.length; i++) {
+      data.add(results[i]);
+    }
   }
 }
