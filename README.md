@@ -30,4 +30,4 @@ To close the socket use `close()`.
 ## Limitations
 - For now only `can0` is supported as an interface.
 - You can not change the bitrate once it is set. To change the bitrate a reboot of your device is currently needed.
-- Because I have no hardware to test, only reading is supported.
+- Because I have no hardware to test, only reading is supported. If you are intrested in the package and have the hardware, feel free to contact me and get it on the way.
