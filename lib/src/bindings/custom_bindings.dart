@@ -194,7 +194,6 @@ class ArrayHelper_ifreq_ifr_name_level0 {
   }
 }
 
-// Copied from arm32 bindings.
 class sockaddr extends ffi.Struct {
   @ffi.Uint16()
   external int sa_family;
