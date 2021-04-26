@@ -1,6 +1,6 @@
-import 'dart:ffi' as ffi;
+import 'dart:ffi';
 import 'dart:io';
-import 'package:ffi/ffi.dart' as ffi;
+import 'package:ffi/ffi.dart';
 import 'package:linux_can/src/bindings.dart';
 import 'package:linux_can/src/bindings/custom_bindings.dart';
 
@@ -16,12 +16,12 @@ const _canInterfaceUtf8 = [
 ];
 
 class CanDevice {
-  final _library = ffi.DynamicLibrary.open(_dylib);
+  final _library = DynamicLibrary.open(_dylib);
   late final _libC = LibC(_library);
 
   CanDevice({int bitrate: 500000}) {
     final cmd = 'sudo ip link set $_canInterface up type can bitrate $bitrate';
-    _libC.system(ffi.Utf8.toUtf8(cmd));
+    _libC.system(cmd.toNativeUtf8());
   }
 
   int _socket = -1;
@@ -32,7 +32,7 @@ class CanDevice {
     _socket = _libC.socket(PF_CAN, SOCK_RAW, CAN_RAW);
     if (_socket < 0) throw SocketException("Failed to open CAN socket.");
 
-    final ifrPtr = ffi.allocate<ifreq>();
+    final ifrPtr = malloc.allocate<ifreq>(sizeOf<ifreq>());
     final ifr = ifrPtr.ref;
     ifr.ifr_name[0] = _canInterfaceUtf8[0];
     ifr.ifr_name[1] = _canInterfaceUtf8[1];
@@ -42,35 +42,36 @@ class CanDevice {
     if (outputioctl < 0)
       throw SocketException("Failed to initalize CAN socket: $_socket");
 
-    final addrCanPtr = ffi.allocate<sockaddr_can>();
+    final addrCanPtr =
+        malloc.allocate<sockaddr_can>(sizeOf<sockaddr_can>());
     final addrCan = addrCanPtr.ref;
     addrCan.can_family = AF_CAN;
     addrCan.can_ifindex = ifr.ifr_ifindex;
 
-    final len = ffi.sizeOf<sockaddr>();
+    final len = sizeOf<sockaddr>();
     final sockaddrPtr = addrCanPtr.cast<sockaddr>();
     final output = _libC.bind(_socket, sockaddrPtr, len);
     if (output < 0)
       throw SocketException("Failed to bind CAN socket: $_socket");
 
-    ffi.free(ifrPtr);
-    ffi.free(addrCanPtr);
+    malloc.free(ifrPtr);
+    malloc.free(addrCanPtr);
   }
 
   /// Reads from the CAN bus. Throws an `SocketException` when failed.
   CanFrame read() {
     if (_socket < 0) throw StateError("Call setup() before reading.");
 
-    final canFrame = ffi.allocate<can_frame>();
-    final pointer = canFrame.cast<ffi.Void>();
-    final len = ffi.sizeOf<can_frame>();
+    final canFrame = malloc.allocate<can_frame>(sizeOf<can_frame>());
+    final pointer = canFrame.cast<Void>();
+    final len = sizeOf<can_frame>();
     if (_libC.read(_socket, pointer, len) < 0)
       throw SocketException("Failed to read from CAN Socket: $_socket");
 
     final resultFrame = pointer.cast<can_frame>().ref;
     final read = CanFrame._fromNative(resultFrame);
 
-    ffi.free(canFrame);
+    malloc.free(canFrame);
     return read;
   }
 
