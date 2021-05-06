@@ -4,18 +4,6 @@ import 'package:linux_can/src/bindings/custom_bindings.dart';
 import 'package:linux_can/src/bindings/libc_arm32.g.dart';
 import 'package:linux_can/src/bindings/libc_arm64.g.dart';
 
-// Typedefs for custom `ioctl`-function.
-typedef _c_ioctl_pointer_32 = ffi.Int32 Function(
-    ffi.Int32 __fd, ffi.Uint32 __request, ffi.Pointer<ffi.Void> argp);
-typedef _c_ioctl_pointer_64 = ffi.Int32 Function(
-    ffi.Int32 __fd, ffi.Uint64 __request, ffi.Pointer<ffi.Void> argp);
-typedef _dart_ioctl_pointer = int Function(
-    int __fd, int __request, ffi.Pointer<ffi.Void> argp);
-
-// Typedefs for `system`-function.
-typedef _c_system = ffi.Int32 Function(ffi.Pointer<ffi.Utf8> command);
-typedef _dartSystem = int Function(ffi.Pointer<ffi.Utf8> command);
-
 /// Base which constructs all methods needed. Helpful to provide one functionset
 /// for all Platforms.
 abstract class LibCBase {
@@ -32,6 +20,7 @@ abstract class LibCBase {
   int write(int __fd, ffi.Pointer<ffi.Void> __buf, int __n);
   int close(int __fd);
   int system(ffi.Pointer<ffi.Utf8> command);
+  int fcntl(int fd, int cmd, int arg);
 }
 
 /// Implementation of the Arm32 C Library.
@@ -40,17 +29,23 @@ class LibC32 extends LibCArm32 implements LibCBase {
 
   final ffi.DynamicLibrary _dylib;
 
-  late final _dart_ioctl_pointer _ioctlPointer =
-      _dylib.lookupFunction<_c_ioctl_pointer_32, _dart_ioctl_pointer>('ioctl');
+  late final _ioctlPointer =
+      _dylib.lookupFunction<c_ioctl_pointer_32, dart_ioctl_pointer>('ioctl');
   @override
   int ioctlPointer(int __fd, int __request, ffi.Pointer argp) {
     return _ioctlPointer(__fd, __request, argp.cast<ffi.Void>());
   }
 
-  late final _system = _dylib.lookupFunction<_c_system, _dartSystem>("system");
+  late final _system = _dylib.lookupFunction<c_system, dartSystem>('system');
   @override
   int system(ffi.Pointer<ffi.Utf8> command) {
     return _system(command);
+  }
+
+  late final _fcntl = _dylib.lookupFunction<c_fcntl, dartFcntl>('fcntl');
+  @override
+  int fcntl(int fd, int cmd, int arg) {
+    return _fcntl(fd, cmd, arg);
   }
 }
 
@@ -60,17 +55,23 @@ class LibC64 extends LibCArm64 implements LibCBase {
 
   final ffi.DynamicLibrary _dylib;
 
-  late final _dart_ioctl_pointer _ioctlPointer =
-      _dylib.lookupFunction<_c_ioctl_pointer_64, _dart_ioctl_pointer>('ioctl');
+  late final _ioctlPointer =
+      _dylib.lookupFunction<c_ioctl_pointer_64, dart_ioctl_pointer>('ioctl');
   @override
   int ioctlPointer(int __fd, int __request, ffi.Pointer argp) {
     return _ioctlPointer(__fd, __request, argp.cast<ffi.Void>());
   }
 
-  late final _system = _dylib.lookupFunction<_c_system, _dartSystem>("system");
+  late final _system = _dylib.lookupFunction<c_system, dartSystem>('system');
   @override
   int system(ffi.Pointer<ffi.Utf8> command) {
     return _system(command);
+  }
+
+  late final _fcntl = _dylib.lookupFunction<c_fcntl, dartFcntl>('fcntl');
+  @override
+  int fcntl(int fd, int cmd, int arg) {
+    return _fcntl(fd, cmd, arg);
   }
 }
 
@@ -135,5 +136,10 @@ class LibC implements LibCBase {
   @override
   int system(ffi.Pointer<ffi.Utf8> command) {
     return _native.system(command);
+  }
+
+  @override
+  int fcntl(int fd, int cmd, int arg) {
+    return _native.fcntl(fd, cmd, arg);
   }
 }

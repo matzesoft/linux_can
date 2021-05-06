@@ -1,9 +1,28 @@
 import 'dart:ffi' as ffi;
-import 'package:ffi/ffi.dart';
+import 'package:ffi/ffi.dart' as ffi;
 
 import 'libc_arm32.g.dart';
 
 const SIOCGIFINDEX = 0x8933;
+
+const F_GETFL = 0x03;
+const F_SETFL = 0x04;
+
+// Typedefs for custom `ioctl`-function.
+typedef c_ioctl_pointer_32 = ffi.Int32 Function(
+    ffi.Int32 __fd, ffi.Uint32 __request, ffi.Pointer<ffi.Void> argp);
+typedef c_ioctl_pointer_64 = ffi.Int32 Function(
+    ffi.Int32 __fd, ffi.Uint64 __request, ffi.Pointer<ffi.Void> argp);
+typedef dart_ioctl_pointer = int Function(
+    int __fd, int __request, ffi.Pointer<ffi.Void> argp);
+
+// Typedefs for `system`-function.
+typedef c_system = ffi.Int32 Function(ffi.Pointer<ffi.Utf8> command);
+typedef dartSystem = int Function(ffi.Pointer<ffi.Utf8> command);
+
+typedef c_fcntl = ffi.Int16 Function(
+    ffi.Int16 fd, ffi.Int16 cmd, ffi.Int32 arg);
+typedef dartFcntl = int Function(int fd, int cmd, int arg);
 
 // ignore: camel_case_types
 class epoll_event extends ffi.Struct {

@@ -1,27 +1,34 @@
 import 'dart:ffi';
 import 'dart:io';
+import 'dart:isolate';
 import 'package:ffi/ffi.dart';
 import 'package:linux_can/src/bindings.dart';
 import 'package:linux_can/src/bindings/custom_bindings.dart';
 
 import 'bindings/libc_arm32.g.dart';
 
-const _dylib = "libc.so.6";
-const _canInterface = "can0";
-const _canInterfaceUtf8 = [
+const _DYLIB = "libc.so.6";
+const _CAN_INTERFACE = "can0";
+const _CAN_INTERFACE_UTF8 = [
   0x63, //c
   0x61, //a
   0x6E, //n
   0x30, //0
 ];
 
+void _setupBitrate(int bitrate) {
+  final _libC = LibC(DynamicLibrary.open(_DYLIB));
+
+  final cmd = 'sudo ip link set $_CAN_INTERFACE up type can bitrate $bitrate';
+  _libC.system(cmd.toNativeUtf8());
+}
+
 class CanDevice {
-  final _library = DynamicLibrary.open(_dylib);
-  late final _libC = LibC(_library);
+  late final _libC = LibC(DynamicLibrary.open(_DYLIB));
 
   CanDevice({int bitrate: 500000}) {
-    final cmd = 'sudo ip link set $_canInterface up type can bitrate $bitrate';
-    _libC.system(cmd.toNativeUtf8());
+    final isolate = Isolate.spawn<int>(_setupBitrate, bitrate);
+    isolate.then((value) => value.kill());
   }
 
   int _socket = -1;
@@ -32,22 +39,28 @@ class CanDevice {
     _socket = _libC.socket(PF_CAN, SOCK_RAW, CAN_RAW);
     if (_socket < 0) throw SocketException("Failed to open CAN socket.");
 
+    // Set socket non-blocking
+    final flags = _libC.fcntl(_socket, F_GETFL, 0);
+    _libC.fcntl(_socket, F_SETFL, flags | O_NONBLOCK);
+
+    // IFR
     final ifrPtr = malloc.allocate<ifreq>(sizeOf<ifreq>());
     final ifr = ifrPtr.ref;
-    ifr.ifr_name[0] = _canInterfaceUtf8[0];
-    ifr.ifr_name[1] = _canInterfaceUtf8[1];
-    ifr.ifr_name[2] = _canInterfaceUtf8[2];
-    ifr.ifr_name[3] = _canInterfaceUtf8[3];
+    ifr.ifr_name[0] = _CAN_INTERFACE_UTF8[0];
+    ifr.ifr_name[1] = _CAN_INTERFACE_UTF8[1];
+    ifr.ifr_name[2] = _CAN_INTERFACE_UTF8[2];
+    ifr.ifr_name[3] = _CAN_INTERFACE_UTF8[3];
     final outputioctl = _libC.ioctlPointer(_socket, SIOCGIFINDEX, ifrPtr);
     if (outputioctl < 0)
       throw SocketException("Failed to initalize CAN socket: $_socket");
 
-    final addrCanPtr =
-        malloc.allocate<sockaddr_can>(sizeOf<sockaddr_can>());
+    // CAN Addr
+    final addrCanPtr = malloc.allocate<sockaddr_can>(sizeOf<sockaddr_can>());
     final addrCan = addrCanPtr.ref;
     addrCan.can_family = AF_CAN;
     addrCan.can_ifindex = ifr.ifr_ifindex;
 
+    // Bind socket
     final len = sizeOf<sockaddr>();
     final sockaddrPtr = addrCanPtr.cast<sockaddr>();
     final output = _libC.bind(_socket, sockaddrPtr, len);
