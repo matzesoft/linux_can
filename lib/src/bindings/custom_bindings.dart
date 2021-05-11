@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: camel_case_types
 import 'dart:ffi' as ffi;
 import 'package:ffi/ffi.dart' as ffi;
 
@@ -24,7 +26,6 @@ typedef c_fcntl = ffi.Int16 Function(
     ffi.Int16 fd, ffi.Int16 cmd, ffi.Int32 arg);
 typedef dartFcntl = int Function(int fd, int cmd, int arg);
 
-// ignore: camel_case_types
 class epoll_event extends ffi.Struct {
   @ffi.Uint32()
   external int events;
@@ -37,7 +38,6 @@ class epoll_event extends ffi.Struct {
 /// @can_family:  address family number AF_CAN.
 /// @can_ifindex: CAN network interface index.
 /// @can_addr:    protocol specific address information
-// ignore: camel_case_types
 class sockaddr_can extends ffi.Struct {
   @ffi.Uint16()
   external int can_family;
@@ -48,7 +48,6 @@ class sockaddr_can extends ffi.Struct {
   external tp_struct tp;
 }
 
-// ignore: camel_case_types
 class tp_struct extends ffi.Struct {
   @ffi.Uint32()
   external int rx_id;
@@ -57,7 +56,6 @@ class tp_struct extends ffi.Struct {
   external int tx_id;
 }
 
-// ignore: camel_case_types
 class ifreq extends ffi.Struct {
   @ffi.Uint8()
   external int _unique_ifr_name_item_0;

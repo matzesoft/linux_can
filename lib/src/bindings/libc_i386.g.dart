@@ -1,3 +1,4 @@
+// ignore_for_file: unused_field
 import 'custom_bindings.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
