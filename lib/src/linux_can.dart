@@ -25,17 +25,18 @@ void _setupBitrate(int bitrate) {
 
 class CanDevice {
   late final _libC = LibC(DynamicLibrary.open(_DYLIB));
+  final int bitrate;
 
-  CanDevice({int bitrate: 500000}) {
-    final isolate = Isolate.spawn<int>(_setupBitrate, bitrate);
-    isolate.then((value) => value.kill());
-  }
+  CanDevice({this.bitrate: 500000});
 
   int _socket = -1;
 
   /// Sets up the socket and binds it to `can0`. Throws an `SocketException``
   /// when something wents wrong.
-  void setup() {
+  Future setup() async {
+    final isolate = await Isolate.spawn<int>(_setupBitrate, bitrate);
+    isolate.kill();
+
     _socket = _libC.socket(PF_CAN, SOCK_RAW, CAN_RAW);
     if (_socket < 0) throw SocketException("Failed to open CAN socket.");
 

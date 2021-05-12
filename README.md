@@ -11,7 +11,7 @@ There are no system dependenices needed, except the `libc.so.6` which probably s
 At first create a `CanDevice`. You can set a custom bitrate, default is 500 000. Afterwards call `setup()`. A `SocketException` will be thrown if something goes wrong.
 ```dart
 final canDevice = CanDevice(bitrate: 250000);
-canDevice.setup();
+await canDevice.setup();
 ```
 
 ### Communication

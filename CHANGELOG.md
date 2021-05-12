@@ -10,3 +10,6 @@
 
 * Calls init in own isolate.
 * Set socket to non-blocking.
+
+## [0.1.3] - 12.05.2021
+* Set `setup()`-function to Future.
