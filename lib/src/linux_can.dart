@@ -89,6 +89,13 @@ class CanDevice {
     return read;
   }
 
+  void clearReceiveBuffer() {
+    CanFrame? frame;
+    do {
+      frame = read();
+    } while (frame.isEmpty);
+  }
+
   void close() {
     _libC.close(_socket);
     _socket = -1;
@@ -98,6 +105,8 @@ class CanDevice {
 class CanFrame {
   int? id;
   List<int> data = [];
+
+  bool get isEmpty => data.isEmpty;
 
   CanFrame._fromNative(can_frame frame) {
     id = frame.can_id;
