@@ -90,10 +90,25 @@ class CanDevice {
   }
 
   void clearReceiveBuffer() {
+    // TODO: Remove after testing
+    int counter = 0;
     CanFrame? frame;
     do {
-      frame = read();
-    } while (frame.isEmpty);
+      try {
+        counter += 1;
+        print("Counter: $counter");
+        frame = read();
+        if (!frame.isEmpty) {
+          print("ID: ${frame.id}");
+          print("Data[0]. ${frame.data[0]}");
+        } else {
+          print("Empty frame");
+        }
+      } catch (error) {
+        print("Failed frame");
+        break;
+      }
+    } while (!frame.isEmpty);
   }
 
   void close() {
