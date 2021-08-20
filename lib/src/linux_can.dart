@@ -45,7 +45,7 @@ class CanDevice {
     _libC.fcntl(_socket, F_SETFL, flags | O_NONBLOCK);
 
     // IFR
-    final ifrPtr = malloc.allocate<ifreq>(sizeOf<ifreq>());
+    final ifrPtr = calloc.allocate<ifreq>(sizeOf<ifreq>());
     final ifr = ifrPtr.ref;
     ifr.ifr_name[0] = _CAN_INTERFACE_UTF8[0];
     ifr.ifr_name[1] = _CAN_INTERFACE_UTF8[1];
@@ -56,27 +56,27 @@ class CanDevice {
       throw SocketException("Failed to initalize CAN socket: $_socket");
 
     // CAN Addr
-    final addrCanPtr = malloc.allocate<sockaddr_can>(sizeOf<sockaddr_can>());
+    final addrCanPtr = calloc.allocate<sockaddr_can>(sizeOf<sockaddr_can>());
     final addrCan = addrCanPtr.ref;
     addrCan.can_family = AF_CAN;
     addrCan.can_ifindex = ifr.ifr_ifindex;
 
     // Bind socket
-    final len = sizeOf<sockaddr>();
+    final len = sizeOf<sockaddr_can>();
     final sockaddrPtr = addrCanPtr.cast<sockaddr>();
     final output = _libC.bind(_socket, sockaddrPtr, len);
     if (output < 0)
       throw SocketException("Failed to bind CAN socket: $_socket");
 
-    malloc.free(ifrPtr);
-    malloc.free(addrCanPtr);
+    calloc.free(ifrPtr);
+    calloc.free(addrCanPtr);
   }
 
   /// Reads from the CAN bus. Throws an `SocketException` when failed.
   CanFrame read() {
     if (_socket < 0) throw StateError("Call setup() before reading.");
 
-    final canFrame = malloc.allocate<can_frame>(sizeOf<can_frame>());
+    final canFrame = calloc.allocate<can_frame>(sizeOf<can_frame>());
     final pointer = canFrame.cast<Void>();
     final len = sizeOf<can_frame>();
     if (_libC.read(_socket, pointer, len) < 0)
@@ -85,7 +85,7 @@ class CanDevice {
     final resultFrame = pointer.cast<can_frame>().ref;
     final read = CanFrame._fromNative(resultFrame);
 
-    malloc.free(canFrame);
+    calloc.free(canFrame);
     return read;
   }
 
